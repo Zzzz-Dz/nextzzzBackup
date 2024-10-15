@@ -1,13 +1,46 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useEffect, useState,useContext } from "react";
-// import { UserDispatchContext } from '/src/globalContext.js'
+import { useEffect, useState } from "react";
+// import { useActionState } from "react";
 import { toast,ToastContainer,Slide } from 'react-toastify'
+// import { signup } from '@/app/actions/auth.js'
 
-function LoginForm({set}){
+const handleSubmit = async ({e,setState}) => {
+    e.preventDefault();
+
+    const formType = e.target.formType.value;
+    const data = {
+      username: e.target.username.value,
+      password: e.target.password.value,
+    };
+
+    const JSONdata = JSON.stringify(data);
+    let formAction;
+    if (formType === 'form1'){
+        formAction = '/api/User/login';    
+    }
+    
+    if (formType === 'form2'){
+        formAction = '/api/User/enroll';
+    }
+
+    const options = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSONdata,
+    };
+
+    const response = await fetch(formAction, options);
+    const result = await response.json();
+    setState(result);
+  };
+
+function LoginForm({set,setState}){
     return (
-        <form action='' name="login" className="flex flex-col items-center gap-4 h-full justify-center relative z-20" method="post">
+        <form onSubmit={ e => handleSubmit({ e:e,setState:setState})} name="login" className="flex flex-col items-center gap-4 h-full justify-center relative z-20" method="post">
             <input type="hidden" name="formType" value="form1" />
             <label className="tracking-widest"><span className="px-2">账户</span><input type="text" className="form-input rounded-md py-1" name="username"></input></label>
             <label className="tracking-widest"><span className="px-2">密码</span><input type="text" className='form-input rounded-md py-1' name="password"></input></label>
@@ -19,9 +52,9 @@ function LoginForm({set}){
     )
 }
 
-function EnrollForm({set}){
+function EnrollForm({set,setState}){
     return (
-        <form action='' name="enroll" className="flex flex-col items-center gap-4 h-full justify-center relative z-20" method="post">
+        <form onSubmit={ e => handleSubmit({ e:e,setState:setState}) } name="enroll" className="flex flex-col items-center gap-4 h-full justify-center relative z-20" method="post">
             <input type="hidden" name="formType" value="form2" />
             <label className="tracking-widest"><span className="px-2">账户</span><input type="text" className='form-input rounded-md py-1' name="username"></input></label>
             <label className="tracking-widest"><span className="px-2">密码</span><input type="text" className='form-input rounded-md py-1' name="password"></input></label>
@@ -33,50 +66,43 @@ function EnrollForm({set}){
     )
 }
 
-function IsFrom(){
-    const [state, setState ] = useState('login')
+function IsFrom({setState}){
+    const [subState, setSubState ] = useState('login')
     function handelClick(){
-        setState(state === 'login' ? 'enroll' : 'login')
+        setSubState(subState === 'login' ? 'enroll' : 'login')
     }
     return (
         <>
-        {state === 'login' ? <LoginForm set={handelClick} /> : <EnrollForm set={handelClick} />}
+        {subState === 'login' ? <LoginForm set={handelClick} setState={setState} /> : <EnrollForm set={handelClick} setState={setState} />}
         </>
     )
 }
 
 export default function Page(){
-    // const stateDispatch = useContext(UserDispatchContext)
+    const [state, setState] = useState(null)
     const router = useRouter()
     useEffect(()=>{
-        const actionData = null;
-        if(actionData){
-            console.log(actionData)
-            const { code ,msg=null ,data=null } = actionData;
-            if (code === "500"){
-                toast.error('服务器未响应')
-            }
+        if(state){
+            const { code, msg=null, data=null } = state;
             if (code === "502" || code === "501"){
-                console.log(msg)
-                toast.error(data)
+                console.log(data)
+                toast.error(msg)
             }
             if (code === "201"){
-                toast.success('登录成功')
+                toast.success(msg)
                 setTimeout(()=>{
-                    localStorage.setItem('token',data);
-                    // stateDispatch({type:'islogined'})
                     router.replace('/')
                 },2000)
             }
         }
-    },[])
+    },[state,router])
     return(
     <>
         <ToastContainer position='top-center' autoClose={1500} closeButton={false} transition={Slide} hideProgressBar={false} pauseOnHover={false} pauseOnFocusLoss={false} closeOnClick={true} newestOnTop={true} role='alert' theme='light' />
         <div className="flex justify-center items-center relative h-screen ">
             <div className=" relative rounded-2xl z-20  border-2 lg:w-2/3 h-3/4 w-[25rem]">
                 <div className={`z-10 w-full h-full absolute top-0 left-0 opacity-20 bg-[url('/YanamiLoding.png')] rounded-2xl bg-cover bg-no-repeat`}></div>
-                <IsFrom />
+                <IsFrom setState={setState} />
             </div>
         </div>  
      </>

@@ -1,11 +1,16 @@
-const OSS = require("ali-oss");
+import OSS from "ali-oss"
 
 export async function GET(request, { params }) {
-  return new Response('Hello, World!',{status:200,headers:{"Content-Type":"text/plain"}})
-
+  const client = new OSS({
+    region: "oss-cn-hangzhou",
+    accessKeyId: process.env.OSS_ACCESS_KEY_ID,
+    accessKeySecret: process.env.OSS_ACCESS_KEY_SECRET,
+    // 填写Bucket名称。
+    bucket: "nextappzzz"
+  });
   
   const url = decodeURI(params.url);
-  console.log(url)
+  
   // 方法一
   // const url = client.signatureUrl("/Image/1.txt", {
   //   method: "PUT",
@@ -26,7 +31,7 @@ export async function GET(request, { params }) {
   
   
   // 从OSS下载文件以验证上传成功。
-  // const getResult = await client.get(`/Image/${url}`);
+  const getResult = await client.get(`/Image/${url}`);
   const buffer = new Map(Object.entries(getResult)).get('content')
   // let image = "data:image/png;base64," + btoa(new Uint8Array(buffer).reduce(async (res, byte) => {return res + String.fromCharCode(byte), ''}))
   return new Response(buffer,{status:200,headers:{'Content-Type':'image/png'}})

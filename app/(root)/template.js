@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from "next/image";
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import 'react-toastify/dist/ReactToastify.css';
 import { useEffect, useRef, useContext } from 'react';
 import { toast,ToastContainer,Slide } from 'react-toastify';
@@ -13,46 +13,58 @@ function RouterComponent(){
   const state = useContext(UserContext)
   return (
     <>
-      { state.isLogined ? <Link href="/User" className='p-1 hover:bg-gray-200 '>账户</Link> : <Link href="/User" className='p-1 hover:bg-gray-200 '>登录</Link>}
+      { state.isLogined ? <Link href="/Account" className='p-1 hover:bg-gray-200 '>账户</Link> : <Link href="/User" className='p-1 hover:bg-gray-200 '>登录</Link>}
     </>
   )
 }
 
 export default function Template({children}) {
+  const router = useRouter();
+  const pathname = usePathname()
   const searchParams = useSearchParams();
   const stateDispatch = useContext(UserDispatchContext); 
   const toastId = useRef(null);
   useEffect(()=>{
-    const status = decodeURI(searchParams.get('state'))
+    const state = searchParams.get('state');
     const msg = decodeURI(searchParams.get('msg'))
-    if(!toast.isActive(toastId.current)){
-      switch (status){
-        case 'login':
-          toastId.current = toast.success(msg)
-          break;
-        case 'islogined':
-          toastId.current = toast.success('已登录')
-          break;
-        case 'tokenError':
-          toastId.current = toast.warning(msg)
-          break;
-        case '404':
-          toastId.current = toast.error('服务器未响应')
-          break;
-        default:
-          break;
+    if (state){
+      router.replace(pathname,{scroll:true})
+    }
+    return () => {
+      if(!toast.isActive(toastId.current)){ 
+        switch (state){
+          case 'nologin':
+            toastId.current = toast.warning(msg)
+            break;
+          case 'islogined':
+            toastId.current = toast.success('已登录')
+            break;
+          default:
+            break;
+        }
       }
     }
-    return ()=>{
-      
-    }
-  },[searchParams])
+  },[searchParams,pathname,router])
 
   useEffect(()=>{
-    const token = localStorage.getItem('token')
-    if (token){
-      stateDispatch({type:'islogined'}) 
+    let ignore = false;
+    async function startFetching() {
+        try{
+          const json = await fetch("/api/hasCookie",{method:"GET",headers:{"Content-Type":"text/plain"}}).then(res => res.text())
+          if (!ignore) {
+            if(json === 'have'){
+              stateDispatch({type:"islogined"})
+            }
+          }
+        }catch (e){
+          console.error(e);
+          return null
+        }  
     }
+    startFetching();
+    return () => {
+        ignore = true;
+    };
   },[stateDispatch])
   
   return (

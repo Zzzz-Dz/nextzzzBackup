@@ -1,12 +1,17 @@
-const OSS = require("ali-oss");
+import OSS from "ali-oss"
 
 export async function GET() {
-  
-  return new Response('Hello, World!',{status:200,headers:{"Content-Type":"text/plain"}})
+  const client = new OSS({
+    region: "oss-cn-hangzhou",
+    accessKeyId: process.env.OSS_ACCESS_KEY_ID,
+    accessKeySecret: process.env.OSS_ACCESS_KEY_SECRET,
+    // 填写Bucket名称。
+    bucket: "nextappzzz"
+  });
 
   // 方法二
   try {
-    const array = new Array()
+    const array = []
     const getResultList = await client.list({prefix:"Image/"});
     const result = new Map(Object.entries(getResultList))
     const result_objects = result.get('objects')

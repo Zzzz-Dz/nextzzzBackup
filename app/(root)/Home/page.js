@@ -11,11 +11,12 @@ function PictrueMap(){
       let ignore = false;
       async function startFetching() {
          try{
-            const json = await fetch("/api/getWorks",{method:"GET",headers:{"Content-Type":"application/json"}}).then((res)=>res.json()).then((v)=>{ const {worksData} = v; return worksData.map((data,index)=>{return {...data,id:index+1}})})
+            const json = await fetch("/api/getWorks",{ cache:"force-cache",method:"GET",headers:{"Content-Type":"application/json"}}).then((res)=>res.json()).then((v)=>{ const {worksData} = v; return worksData.map((data,index)=>{return {...data,id:index+1}})})
             if (!ignore) {
                setPictrueDatas(json);
             }
          }catch (e){
+            console.error(e);
             return null
          }  
       }
@@ -78,5 +79,4 @@ export default function HomePage(){
          </div>
       </div>
    )
-
 }

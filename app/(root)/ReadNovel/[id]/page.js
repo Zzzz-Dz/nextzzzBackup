@@ -2,11 +2,11 @@
 
 import { ReactReader } from "react-reader";
 import { useState } from "react";
-import IP from '../../../plugins/localIp.js'
 
 export default function Page({ params }){
-    const id = params.toString();
+    const { id } = params;
     const [ book_title, suffix ] = id.split('.');
+    console.log(suffix)
     return (
         <div className=" w-full h-full" >
            <Read key={id} EpubId={id} book_title={book_title} />
@@ -19,7 +19,7 @@ function Read({EpubId: id, book_title: title}){
     return (
         <ReactReader
                 title={`败犬女主太多了 ${title}`}
-                url={`http://${IP}:5006/static/epub/${id} `}
+                url={`/app/Novel/epub/${id} `}
                 showToc={true}
                 location={location}
                 locationChanged={(epubcfi) => setLocation(epubcfi)}

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-
+import { cookies } from 'next/headers'
 
 // 重定向  使用new URL无效，因为request.url是相对路径
 // return NextResponse.redirect(new URL('/:path', request.url))将传入请求重定向到其他URL
@@ -10,14 +10,28 @@ import { NextResponse } from 'next/server'
 export function middleware(request) {
   if (request.nextUrl.pathname === "/"){
     return NextResponse.redirect(new URL('/Home', request.url))
-}
-  if (request.nextUrl.pathname === "/ReadNovel"){
-    return null
-}
-  
+  }
+  if (request.nextUrl.pathname === "/Home"){
+    return NextResponse.next();
+  }
+  if (request.nextUrl.pathname.startsWith("/ReadNovel/")){
+    console.log(request.nextUrl.pathname)
+    const cookie = cookies().get("Yaname")?.value
+    if (cookie){
+      return NextResponse.next()
+    }
+    return NextResponse.redirect(new URL(`/ReadNovel?state=nologin&msg=${encodeURI('未经授权')}`, request.url),{type:'replace'})
+  }
+  if (request.nextUrl.pathname === "/User"){
+    const cookie = cookies().get("Yaname")?.value
+    if (cookie){
+      return NextResponse.redirect(new URL('/Home?state=islogined', request.url))
+    }
+    return NextResponse.next()  
+  }
 }
 
- 
+
 export const config = {
   matcher: [
     /*
